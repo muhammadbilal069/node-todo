@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 10px 0; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>My Todo App</h2>
+        
+        <!-- Form to add todo -->
+        <form action="/todo/add" method="POST">
+            <input type="text" name="data" placeholder="Enter todo..." required>
+            <button type="submit">Add Todo</button>
+        </form>
+
+        <hr>
+
+        <ul>
+            <% for(let i = 0; i < todos.length; i++) { %>
+                <li>
+                    <!-- Checkbox with status -->
+                    <input 
+                        type="checkbox" 
+                        class="todo-checkbox" 
+                        data-index="<%= i %>" 
+                        <%= todos[i].status ? 'checked' : '' %>>
+                    
+                    <span id="text-<%= i %>" class="<%= todos[i].status ? 'completed' : '' %>">
+                        <%= todos[i].name %>
+                    </span>
+                </li>
+            <% } %>
+        </ul>
+    </div>
+
+    <!-- Frontend Script to call API on checkbox change -->
+    <script>
+        const checkboxes = document.querySelectorAll('.todo-checkbox');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const index = this.getAttribute('data-index');
+                const status = this.checked;
+
+                fetch('/todo/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ index: index, status: status })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const textSpan = document.getElementById(`text-${index}`);
+                        if (status) {
+                            textSpan.classList.add('completed');
+                        } else {
+                            textSpan.classList.remove('completed');
+                        }
+                    }
+                })
+                .catch(err => console.error('Error:', err));
+            });
+        });
+    </script>
+</body>
+</html>
